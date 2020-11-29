@@ -10,7 +10,7 @@ namespace TCPclient
     {
         static int port;
         static IPAddress serverip;
-        static string[] znach = new string[] {" носочек"," помидорчек"," перчик"," Александрович"};
+        static string[] znach = new string[] {"носочек", "помидорчек", "перчик", "Александрович" };
         static Random rnum = new Random();
         static string fullmessage;
         static TcpClient client = null;
@@ -22,14 +22,12 @@ namespace TCPclient
                 serverip = IPAddress.Parse(Console.ReadLine());
                 Console.WriteLine("Введите порт сервера");
                 port = int.Parse(Console.ReadLine());               
-                Console.Clear();
-                Console.Write("Введите ваше имя:");
-                string message = Console.ReadLine();
+                Console.Clear();               
                 client = new TcpClient(Convert.ToString(serverip), port);
                 while (true)
                 {                   
                     NetworkStream stream = client.GetStream();
-                    fullmessage = message + znach[rnum.Next(0, 4)];
+                    fullmessage = znach[rnum.Next(0, 4)];
                     byte[] data = Encoding.Unicode.GetBytes(fullmessage);
                     stream.Write(data);
                     Console.WriteLine("Я: " + fullmessage);
