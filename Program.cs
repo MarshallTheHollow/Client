@@ -14,43 +14,72 @@ namespace TCPclient
         static Random rnum = new Random();
         static string fullmessage;
         static TcpClient client = null;
+        static NetworkStream stream;
         static void Main(string[] args)
         {
+            Console.WriteLine("Введите ip адрес сервера");
+            serverip = IPAddress.Parse(Console.ReadLine());
+            Console.WriteLine("Введите порт сервера");
+            port = int.Parse(Console.ReadLine());
+            Console.Clear();
             try
-            {              
-                Console.WriteLine("Введите ip адрес сервера");
-                serverip = IPAddress.Parse(Console.ReadLine());
-                Console.WriteLine("Введите порт сервера");
-                port = int.Parse(Console.ReadLine());               
-                Console.Clear();               
-                client = new TcpClient(Convert.ToString(serverip), port);
-                while (true)
-                {                   
-                    NetworkStream stream = client.GetStream();
-                    fullmessage = znach[rnum.Next(0, 4)];
-                    byte[] data = Encoding.Unicode.GetBytes(fullmessage);
-                    stream.Write(data);
-                    Console.WriteLine("Я: " + fullmessage);
-                    data = new byte[256];
-                    StringBuilder builder = new StringBuilder();
-                    int bytes = 0;
-                    do
-                    {
-                        bytes = stream.Read(data, 0, data.Length);
-                        builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
-                    }
-                    while (stream.DataAvailable);
-                    Console.WriteLine("Боты: " + builder.ToString());
-                    Thread.Sleep(Sleeptime());
+            {
+                try
+                {
+                    ClientObject Client = new ClientObject();
+                    Client.Connect(serverip, port);
+                    Client.Start();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-            finally
+                     
+        }
+        public class ClientObject
+        {           
+            public void Connect(IPAddress serverip, int port)
             {
-                client.Close();
+                client = new TcpClient(Convert.ToString(serverip), port);
+                stream = client.GetStream();
+            }
+            public void Start()
+            {
+                
+                Thread SendThread = new Thread(new ThreadStart(Send));
+                SendThread.Start();
+                Thread GetThread = new Thread(new ThreadStart(Get));
+                GetThread.Start();
+            }
+            public void Send()
+            {
+                while (true)
+                {                  
+                    fullmessage = znach[rnum.Next(0, 4)];
+                    byte[] data = Encoding.Unicode.GetBytes(fullmessage);
+                    stream.Write(data);
+                    Console.WriteLine("Я: " + fullmessage);
+                    Thread.Sleep(Sleeptime());
+                }
+            }
+            public void Get()
+            {
+                StringBuilder builder = new StringBuilder();
+                byte[] data = new byte[256];
+                int bytes = 0;               
+                do
+                {
+                    builder.Clear();
+                    bytes = stream.Read(data, 0, data.Length);
+                    builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
+                    Console.WriteLine("Боты: " + builder.ToString());
+                }
+                while (true);
             }
             static int Sleeptime()
             {
